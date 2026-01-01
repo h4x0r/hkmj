@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="zh-TW" suppressHydrationWarning>
       <body className="bg-mahjong-green dark:bg-neutral-900 min-h-screen transition-colors">
         <Providers>{children}</Providers>
       </body>

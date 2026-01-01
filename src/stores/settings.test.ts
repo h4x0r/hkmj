@@ -13,8 +13,8 @@ describe("settings store", () => {
   });
 
   describe("initial state", () => {
-    it("has default locale as en", () => {
-      expect(useSettingsStore.getState().locale).toBe("en");
+    it("has default locale as zh-TW", () => {
+      expect(useSettingsStore.getState().locale).toBe("zh-TW");
     });
 
     it("has default theme as system", () => {
@@ -63,26 +63,26 @@ describe("settings store", () => {
 
   describe("reset", () => {
     it("resets all settings to defaults", () => {
-      useSettingsStore.getState().setLocale("zh-TW");
+      useSettingsStore.getState().setLocale("en");
       useSettingsStore.getState().setTheme("dark");
 
       useSettingsStore.getState().reset();
 
-      expect(useSettingsStore.getState().locale).toBe("en");
+      expect(useSettingsStore.getState().locale).toBe("zh-TW");
       expect(useSettingsStore.getState().theme).toBe("system");
     });
   });
 
   describe("toggleLocale", () => {
-    it("toggles from en to zh-TW", () => {
-      useSettingsStore.getState().toggleLocale();
-      expect(useSettingsStore.getState().locale).toBe("zh-TW");
-    });
-
     it("toggles from zh-TW to en", () => {
-      useSettingsStore.getState().setLocale("zh-TW");
       useSettingsStore.getState().toggleLocale();
       expect(useSettingsStore.getState().locale).toBe("en");
+    });
+
+    it("toggles from en to zh-TW", () => {
+      useSettingsStore.getState().setLocale("en");
+      useSettingsStore.getState().toggleLocale();
+      expect(useSettingsStore.getState().locale).toBe("zh-TW");
     });
   });
 

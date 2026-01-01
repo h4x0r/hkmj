@@ -19,7 +19,7 @@ interface SettingsState {
 }
 
 const initialState = {
-  locale: "en" as Locale,
+  locale: "zh-TW" as Locale,
   theme: "system" as Theme,
   availableLocales: ["en", "zh-TW"] as Locale[],
   availableThemes: ["light", "dark", "system"] as Theme[],
