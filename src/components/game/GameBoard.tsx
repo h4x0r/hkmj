@@ -14,6 +14,7 @@ interface PlayerHandProps {
   faceDown?: boolean;
   selectedTileId?: string;
   onTileClick?: (tileId: string) => void;
+  onTileDoubleClick?: (tileId: string) => void;
 }
 
 function PlayerHand({
@@ -24,6 +25,7 @@ function PlayerHand({
   faceDown = false,
   selectedTileId,
   onTileClick,
+  onTileDoubleClick,
 }: PlayerHandProps) {
   const tileSpacing = 0.55;
   const startX = -((tiles.length - 1) * tileSpacing) / 2;
@@ -39,6 +41,7 @@ function PlayerHand({
           isPlayable={isCurrentPlayer}
           faceDown={faceDown}
           onClick={() => onTileClick?.(tile.id)}
+          onDoubleClick={() => onTileDoubleClick?.(tile.id)}
         />
       ))}
     </group>
@@ -87,12 +90,14 @@ interface GameBoardProps {
   currentUserId: string;
   selectedTileId?: string;
   onTileSelect?: (tileId: string) => void;
+  onTileDoubleClick?: (tileId: string) => void;
 }
 
 export function GameBoard({
   currentUserId,
   selectedTileId,
   onTileSelect,
+  onTileDoubleClick,
 }: GameBoardProps) {
   const { players, discardPile, currentPlayerIndex } = useGameStore();
 
@@ -164,6 +169,7 @@ export function GameBoard({
               faceDown={!isUser}
               selectedTileId={isUser ? selectedTileId : undefined}
               onTileClick={isUser && isCurrentTurn ? onTileSelect : undefined}
+              onTileDoubleClick={isUser && isCurrentTurn ? onTileDoubleClick : undefined}
             />
           );
         })}

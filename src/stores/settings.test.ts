@@ -28,6 +28,14 @@ describe("settings store", () => {
     it("has available themes", () => {
       expect(useSettingsStore.getState().availableThemes).toEqual(["light", "dark", "system"]);
     });
+
+    it("has default turn timer as 10", () => {
+      expect(useSettingsStore.getState().turnTimer).toBe(10);
+    });
+
+    it("has available turn timers", () => {
+      expect(useSettingsStore.getState().availableTurnTimers).toEqual([5, 10, 15, 30]);
+    });
   });
 
   describe("setLocale", () => {
@@ -61,15 +69,29 @@ describe("settings store", () => {
     });
   });
 
+  describe("setTurnTimer", () => {
+    it("changes turn timer to 5", () => {
+      useSettingsStore.getState().setTurnTimer(5);
+      expect(useSettingsStore.getState().turnTimer).toBe(5);
+    });
+
+    it("changes turn timer to 30", () => {
+      useSettingsStore.getState().setTurnTimer(30);
+      expect(useSettingsStore.getState().turnTimer).toBe(30);
+    });
+  });
+
   describe("reset", () => {
     it("resets all settings to defaults", () => {
       useSettingsStore.getState().setLocale("en");
       useSettingsStore.getState().setTheme("dark");
+      useSettingsStore.getState().setTurnTimer(30);
 
       useSettingsStore.getState().reset();
 
       expect(useSettingsStore.getState().locale).toBe("zh-TW");
       expect(useSettingsStore.getState().theme).toBe("system");
+      expect(useSettingsStore.getState().turnTimer).toBe(10);
     });
   });
 

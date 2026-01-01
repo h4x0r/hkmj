@@ -3,16 +3,20 @@ import { persist } from "zustand/middleware";
 
 export type Locale = "en" | "zh-TW";
 export type Theme = "light" | "dark" | "system";
+export type TurnTimer = 5 | 10 | 15 | 30;
 
 interface SettingsState {
   locale: Locale;
   theme: Theme;
+  turnTimer: TurnTimer;
   availableLocales: Locale[];
   availableThemes: Theme[];
+  availableTurnTimers: TurnTimer[];
 
   // Actions
   setLocale: (locale: Locale) => void;
   setTheme: (theme: Theme) => void;
+  setTurnTimer: (timer: TurnTimer) => void;
   toggleLocale: () => void;
   cycleTheme: () => void;
   reset: () => void;
@@ -21,8 +25,10 @@ interface SettingsState {
 const initialState = {
   locale: "zh-TW" as Locale,
   theme: "system" as Theme,
+  turnTimer: 10 as TurnTimer,
   availableLocales: ["en", "zh-TW"] as Locale[],
   availableThemes: ["light", "dark", "system"] as Theme[],
+  availableTurnTimers: [5, 10, 15, 30] as TurnTimer[],
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -36,6 +42,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setTheme: (theme) => {
         set({ theme });
+      },
+
+      setTurnTimer: (turnTimer) => {
+        set({ turnTimer });
       },
 
       toggleLocale: () => {
@@ -56,6 +66,7 @@ export const useSettingsStore = create<SettingsState>()(
         set({
           locale: initialState.locale,
           theme: initialState.theme,
+          turnTimer: initialState.turnTimer,
         });
       },
     }),
@@ -64,6 +75,7 @@ export const useSettingsStore = create<SettingsState>()(
       partialize: (state) => ({
         locale: state.locale,
         theme: state.theme,
+        turnTimer: state.turnTimer,
       }),
     }
   )

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useAuthStore } from "@/stores/auth";
 import { useGameStore } from "@/stores/game";
 import { useChatStore } from "@/stores/chat";
+import { useSettingsStore } from "@/stores/settings";
 import { encodeTile } from "@/lib/game/tiles";
 import { isWinningHand } from "@/lib/game/win";
 import { calculateFaan } from "@/lib/game/faan";
@@ -35,7 +36,6 @@ export default function GamePage() {
     status,
     players,
     currentPlayerIndex,
-    discardPile,
     winnerId,
     winningFaan,
     startGame,
@@ -44,10 +44,21 @@ export default function GamePage() {
     declareWin,
   } = useGameStore();
   const { messages, addMessage, addSystemMessage, quickPhrases } = useChatStore();
+  const { turnTimer } = useSettingsStore();
 
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [showQuickPhrases, setShowQuickPhrases] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(turnTimer);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const botTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get current user's player data
+  const currentPlayer = players.find((p) => p.id === user?.id);
+  const isMyTurn = currentPlayer && players[currentPlayerIndex]?.id === user?.id;
+  const isBotTurn = status === "playing" && players[currentPlayerIndex]?.id.startsWith("bot_");
+  const needsToDraw = isMyTurn && currentPlayer?.hand.length === 13;
+  const needsToDiscard = isMyTurn && currentPlayer?.hand.length === 14;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -62,28 +73,22 @@ export default function GamePage() {
       // Demo: Start with 4 players
       const demoPlayers = [
         { id: user.id, displayName: user.displayName, seat: 0 },
-        { id: "bot_1", displayName: "Bot East", seat: 1 },
-        { id: "bot_2", displayName: "Bot South", seat: 2 },
-        { id: "bot_3", displayName: "Bot West", seat: 3 },
+        { id: "bot_1", displayName: t("game.botEast"), seat: 1 },
+        { id: "bot_2", displayName: t("game.botSouth"), seat: 2 },
+        { id: "bot_3", displayName: t("game.botWest"), seat: 3 },
       ];
       startGame(`game_${code}`, demoPlayers, 0);
       addSystemMessage(t("game.gameStarted", { seat: t("seats.east") }));
     }
   }, [user, status, code, startGame, addSystemMessage, t]);
 
-  // Get current user's player data
-  const currentPlayer = players.find((p) => p.id === user?.id);
-  const isMyTurn = currentPlayer && players[currentPlayerIndex]?.id === user?.id;
-  const needsToDraw = isMyTurn && currentPlayer?.hand.length === 13;
-  const needsToDiscard = isMyTurn && currentPlayer?.hand.length === 14;
-
   // Check if current hand is winning
-  const checkWin = () => {
-    if (!currentPlayer) return;
+  const checkWin = useCallback(() => {
+    if (!currentPlayer || !user) return false;
 
-    const handCodes = currentPlayer.hand.map((t) => encodeTile(t));
+    const handCodes = currentPlayer.hand.map((tile) => encodeTile(tile));
     const exposedMeldCodes = currentPlayer.exposedMelds.map((meld) =>
-      meld.tiles.map((t) => encodeTile(t))
+      meld.tiles.map((tile) => encodeTile(tile))
     );
 
     if (isWinningHand(handCodes)) {
@@ -97,14 +102,96 @@ export default function GamePage() {
       });
 
       declareWin(
-        players.findIndex((p) => p.id === user?.id),
+        players.findIndex((p) => p.id === user.id),
         faanResult.total
       );
-      addSystemMessage(`${user?.displayName} wins with ${faanResult.total} faan!`);
+      addSystemMessage(`${user.displayName} wins with ${faanResult.total} faan!`);
+      return true;
     }
-  };
+    return false;
+  }, [currentPlayer, user, players, declareWin, addSystemMessage]);
 
-  const handleDraw = () => {
+  // Bot AI: auto-play when it's bot's turn
+  useEffect(() => {
+    if (!isBotTurn || status !== "playing") return;
+
+    // Clear any existing timeout
+    if (botTimeoutRef.current) {
+      clearTimeout(botTimeoutRef.current);
+    }
+
+    const botPlayer = players[currentPlayerIndex];
+    const botNeedsToDraw = botPlayer.hand.length === 13;
+    const botNeedsToDiscard = botPlayer.hand.length === 14;
+
+    // Simulate thinking delay (0.5-1.5 seconds)
+    const delay = 500 + Math.random() * 1000;
+
+    botTimeoutRef.current = setTimeout(() => {
+      if (botNeedsToDraw) {
+        // Bot draws a tile
+        const drawnTile = drawTile(currentPlayerIndex);
+        if (drawnTile) {
+          addSystemMessage(t("game.botDrewTile", { name: botPlayer.displayName }));
+        }
+      } else if (botNeedsToDiscard) {
+        // Bot discards a random tile (simple AI)
+        const randomIndex = Math.floor(Math.random() * botPlayer.hand.length);
+        const tileToDiscard = botPlayer.hand[randomIndex];
+        const success = discardTile(currentPlayerIndex, tileToDiscard.id);
+        if (success) {
+          addSystemMessage(t("game.botDiscardedTile", { name: botPlayer.displayName }));
+        }
+      }
+    }, delay);
+
+    return () => {
+      if (botTimeoutRef.current) {
+        clearTimeout(botTimeoutRef.current);
+      }
+    };
+  }, [isBotTurn, currentPlayerIndex, players, status, drawTile, discardTile, addSystemMessage, t]);
+
+  // Turn timer countdown
+  useEffect(() => {
+    // Reset timer when turn changes
+    setTimeLeft(turnTimer);
+
+    // Only run timer for human player's turn
+    if (!isMyTurn || status !== "playing") {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Time's up - auto-discard if needed
+          if (needsToDiscard && currentPlayer) {
+            const randomIndex = Math.floor(Math.random() * currentPlayer.hand.length);
+            const tileToDiscard = currentPlayer.hand[randomIndex];
+            const playerIndex = players.findIndex((p) => p.id === user?.id);
+            discardTile(playerIndex, tileToDiscard.id);
+            addSystemMessage(t("game.timeoutDiscard"));
+          }
+          return turnTimer;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isMyTurn, status, currentPlayerIndex, turnTimer, needsToDiscard, currentPlayer, players, user, discardTile, addSystemMessage, t]);
+
+  const handleDraw = useCallback(() => {
     if (!needsToDraw || !user) return;
 
     const playerIndex = players.findIndex((p) => p.id === user.id);
@@ -115,24 +202,30 @@ export default function GamePage() {
       // Auto-check for win after drawing
       setTimeout(checkWin, 100);
     }
-  };
+  }, [needsToDraw, user, players, drawTile, addSystemMessage, t, checkWin]);
 
-  const handleDiscard = () => {
-    if (!needsToDiscard || !selectedTileId || !user) return;
+  const handleDiscard = useCallback((tileId: string) => {
+    if (!needsToDiscard || !user) return;
 
     const playerIndex = players.findIndex((p) => p.id === user.id);
-    const success = discardTile(playerIndex, selectedTileId);
+    const success = discardTile(playerIndex, tileId);
 
     if (success) {
       setSelectedTileId(null);
       addSystemMessage(t("game.youDiscardedTile"));
     }
-  };
+  }, [needsToDiscard, user, players, discardTile, addSystemMessage, t]);
 
-  const handleTileSelect = (tileId: string) => {
+  const handleTileSelect = useCallback((tileId: string) => {
     if (!isMyTurn) return;
-    setSelectedTileId(selectedTileId === tileId ? null : tileId);
-  };
+    setSelectedTileId((prev) => (prev === tileId ? null : tileId));
+  }, [isMyTurn]);
+
+  // Double-click to discard
+  const handleTileDoubleClick = useCallback((tileId: string) => {
+    if (!needsToDiscard) return;
+    handleDiscard(tileId);
+  }, [needsToDiscard, handleDiscard]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,6 +277,13 @@ export default function GamePage() {
     );
   }
 
+  // Calculate timer color based on time left
+  const getTimerColor = () => {
+    if (timeLeft <= 3) return "text-red-500";
+    if (timeLeft <= 5) return "text-yellow-500";
+    return "text-green-400";
+  };
+
   return (
     <main className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
@@ -196,9 +296,14 @@ export default function GamePage() {
         </div>
         <div className="flex items-center gap-4">
           {isMyTurn && (
-            <span className="text-green-400 font-medium animate-pulse">
-              {t("game.yourTurn")}
-            </span>
+            <>
+              <span className={`font-mono text-2xl font-bold ${getTimerColor()}`}>
+                {timeLeft}s
+              </span>
+              <span className="text-green-400 font-medium animate-pulse">
+                {t("game.yourTurn")}
+              </span>
+            </>
           )}
           <button
             onClick={() => router.push("/lobby")}
@@ -217,6 +322,7 @@ export default function GamePage() {
             currentUserId={user.id}
             selectedTileId={selectedTileId || undefined}
             onTileSelect={handleTileSelect}
+            onTileDoubleClick={handleTileDoubleClick}
           />
         </div>
 
@@ -253,13 +359,18 @@ export default function GamePage() {
                 </button>
               )}
               {needsToDiscard && (
-                <button
-                  onClick={handleDiscard}
-                  className="btn btn-secondary w-full"
-                  disabled={!selectedTileId}
-                >
-                  {t("game.discardSelected")}
-                </button>
+                <>
+                  <button
+                    onClick={() => selectedTileId && handleDiscard(selectedTileId)}
+                    className="btn btn-secondary w-full"
+                    disabled={!selectedTileId}
+                  >
+                    {t("game.discardSelected")}
+                  </button>
+                  <p className="text-xs text-neutral-500 text-center">
+                    {t("game.doubleClickToDiscard")}
+                  </p>
+                </>
               )}
             </div>
           )}

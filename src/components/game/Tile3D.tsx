@@ -14,6 +14,7 @@ interface Tile3DProps {
   isPlayable?: boolean;
   faceDown?: boolean;
   onClick?: () => void;
+  onDoubleClick?: () => void;
 }
 
 const TILE_WIDTH = 0.5;
@@ -67,9 +68,28 @@ export function Tile3D({
   isPlayable = true,
   faceDown = false,
   onClick,
+  onDoubleClick,
 }: Tile3DProps) {
   const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
+  const lastClickRef = useRef<number>(0);
+
+  const handleClick = () => {
+    if (!isPlayable) return;
+
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickRef.current;
+
+    if (timeSinceLastClick < 300) {
+      // Double-click detected
+      onDoubleClick?.();
+      lastClickRef.current = 0; // Reset to prevent triple-click
+    } else {
+      // Single click
+      onClick?.();
+      lastClickRef.current = now;
+    }
+  };
 
   // Hover animation
   useFrame(() => {
@@ -106,7 +126,7 @@ export function Tile3D({
         args={[TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH]}
         radius={0.03}
         smoothness={4}
-        onClick={isPlayable ? onClick : undefined}
+        onClick={handleClick}
         onPointerOver={() => isPlayable && setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >

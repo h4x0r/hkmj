@@ -57,6 +57,7 @@
     "tiles": "張牌",
     "drawTile": "摸牌",
     "discardSelected": "打出選中的牌",
+    "doubleClickToDiscard": "雙擊牌張即可出牌",
     "leave": "離開",
     "message": "訊息...",
     "gameOver": "遊戲結束！",
@@ -64,7 +65,13 @@
     "returnToLobby": "返回大廳",
     "gameStarted": "遊戲開始！你是{seat}。",
     "youDrewTile": "你摸了一張牌",
-    "youDiscardedTile": "你打出了一張牌"
+    "youDiscardedTile": "你打出了一張牌",
+    "botEast": "電腦南",
+    "botSouth": "電腦西",
+    "botWest": "電腦北",
+    "botDrewTile": "{name}摸了一張牌",
+    "botDiscardedTile": "{name}打出了一張牌",
+    "timeoutDiscard": "時間到！自動打出一張牌"
   },
   "seats": {
     "east": "東",

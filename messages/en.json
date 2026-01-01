@@ -57,6 +57,7 @@
     "tiles": "tiles",
     "drawTile": "Draw Tile",
     "discardSelected": "Discard Selected",
+    "doubleClickToDiscard": "Double-click a tile to discard",
     "leave": "Leave",
     "message": "Message...",
     "gameOver": "Game Over!",
@@ -64,7 +65,13 @@
     "returnToLobby": "Return to Lobby",
     "gameStarted": "Game started! You are {seat}.",
     "youDrewTile": "You drew a tile",
-    "youDiscardedTile": "You discarded a tile"
+    "youDiscardedTile": "You discarded a tile",
+    "botEast": "Bot South",
+    "botSouth": "Bot West",
+    "botWest": "Bot North",
+    "botDrewTile": "{name} drew a tile",
+    "botDiscardedTile": "{name} discarded a tile",
+    "timeoutDiscard": "Time's up! Auto-discarded a tile"
   },
   "seats": {
     "east": "East",
