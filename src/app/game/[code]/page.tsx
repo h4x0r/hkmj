@@ -19,6 +19,11 @@ const GameBoard = dynamic(
   { ssr: false }
 );
 
+const TilePreloader = dynamic(
+  () => import("@/components/game/TilePreloader").then((mod) => mod.TilePreloader),
+  { ssr: false }
+);
+
 export default function GamePage() {
   const router = useRouter();
   const params = useParams();
@@ -199,11 +204,11 @@ export default function GamePage() {
     const drawnTile = drawTile(playerIndex);
 
     if (drawnTile) {
-      addSystemMessage(t("game.youDrewTile"));
+      addSystemMessage(t("game.youDrewTile", { tile: getTileName(drawnTile, locale) }));
       // Auto-check for win after drawing
       setTimeout(checkWin, 100);
     }
-  }, [needsToDraw, user, players, drawTile, addSystemMessage, t, checkWin]);
+  }, [needsToDraw, user, players, drawTile, addSystemMessage, t, checkWin, locale]);
 
   const handleDiscard = useCallback((tileId: string) => {
     if (!needsToDiscard || !user || !currentPlayer) return;
@@ -321,13 +326,15 @@ export default function GamePage() {
       <div className="flex-1 flex">
         {/* 3D Board */}
         <div className="flex-1 bg-mahjong-green">
-          <GameBoard
-            currentUserId={user.id}
-            selectedTileId={selectedTileId || undefined}
-            onTileSelect={handleTileSelect}
-            onTileDoubleClick={handleTileDoubleClick}
-            onCanvasDoubleClick={handleDraw}
-          />
+          <TilePreloader>
+            <GameBoard
+              currentUserId={user.id}
+              selectedTileId={selectedTileId || undefined}
+              onTileSelect={handleTileSelect}
+              onTileDoubleClick={handleTileDoubleClick}
+              onCanvasDoubleClick={handleDraw}
+            />
+          </TilePreloader>
         </div>
 
         {/* Side panel */}

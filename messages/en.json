@@ -64,7 +64,7 @@
     "winner": "Winner",
     "returnToLobby": "Return to Lobby",
     "gameStarted": "Game started! You are {seat}.",
-    "youDrewTile": "You drew a tile",
+    "youDrewTile": "You drew {tile}",
     "youDiscardedTile": "You discarded {tile}",
     "botEast": "Bot South",
     "botSouth": "Bot West",

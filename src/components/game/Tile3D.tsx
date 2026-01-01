@@ -136,31 +136,18 @@ export function Tile3D({
           distanceFactor={8}
           style={{ pointerEvents: "none" }}
         >
-          <div
+          <img
+            src={getTileImagePath(tile.suit, tile.value)}
+            alt={`${tile.suit} ${tile.value}`}
             style={{
-              width: "40px",
-              height: "56px",
-              backgroundColor: "#f5f5dc",
-              borderRadius: "3px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
+              width: "36px",
+              height: "50px",
+              objectFit: "contain",
+              userSelect: "none",
+              filter: isSelected ? "brightness(1.1)" : "none",
             }}
-          >
-            <img
-              src={getTileImagePath(tile.suit, tile.value)}
-              alt={`${tile.suit} ${tile.value}`}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                userSelect: "none",
-                filter: isSelected ? "brightness(1.1)" : "none",
-              }}
-              draggable={false}
-            />
-          </div>
+            draggable={false}
+          />
         </Html>
       )}
     </group>

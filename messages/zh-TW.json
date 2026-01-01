@@ -64,7 +64,7 @@
     "winner": "勝者",
     "returnToLobby": "返回大廳",
     "gameStarted": "遊戲開始！你是{seat}。",
-    "youDrewTile": "你摸了一張牌",
+    "youDrewTile": "你摸了{tile}",
     "youDiscardedTile": "你打出了{tile}",
     "botEast": "電腦南",
     "botSouth": "電腦西",

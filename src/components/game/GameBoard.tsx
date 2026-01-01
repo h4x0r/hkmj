@@ -3,17 +3,9 @@
 import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
-import { Tile3D, getAllTileImagePaths } from "./Tile3D";
+import { Tile3D } from "./Tile3D";
 import { useGameStore } from "@/stores/game";
 import type { TileWithId } from "@/lib/game/tiles";
-
-// Preload all tile images on module load
-if (typeof window !== "undefined") {
-  getAllTileImagePaths().forEach((path) => {
-    const img = new Image();
-    img.src = path;
-  });
-}
 
 interface PlayerHandProps {
   tiles: TileWithId[];
