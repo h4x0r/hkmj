@@ -159,18 +159,13 @@ export default function GamePage() {
   useEffect(() => {
     if (!isMyTurn || !needsToDraw || status !== "playing" || !user) return;
 
-    // Small delay before auto-draw for better UX
-    const timeout = setTimeout(() => {
-      const playerIndex = players.findIndex((p) => p.id === user.id);
-      const drawnTile = drawTile(playerIndex);
-      if (drawnTile) {
-        addSystemMessage(t("game.youDrewTile", { tile: getTileName(drawnTile, locale) }));
-        // Auto-check for win after drawing
-        setTimeout(checkWin, 100);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeout);
+    const playerIndex = players.findIndex((p) => p.id === user.id);
+    const drawnTile = drawTile(playerIndex);
+    if (drawnTile) {
+      addSystemMessage(t("game.youDrewTile", { tile: getTileName(drawnTile, locale) }));
+      // Auto-check for win after drawing
+      setTimeout(checkWin, 100);
+    }
   }, [isMyTurn, needsToDraw, status, user, players, drawTile, addSystemMessage, t, locale, checkWin]);
 
   // Turn timer countdown
