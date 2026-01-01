@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
-import type { Mesh } from "three";
+import type { Group } from "three";
 import type { TileWithId } from "@/lib/game/tiles";
 
 interface Tile3DProps {
@@ -27,7 +27,7 @@ const TILE_BACK_COLOR = "#228B22"; // Forest green
 const TILE_SELECTED_COLOR = "#fef08a"; // Yellow highlight
 
 // Map suit + value to FluffyStuff SVG file names
-const getTileImagePath = (suit: string, value: number): string => {
+export const getTileImagePath = (suit: string, value: number): string => {
   switch (suit) {
     case "dot":
       return `/tiles/Pin${value}.svg`;
@@ -48,6 +48,24 @@ const getTileImagePath = (suit: string, value: number): string => {
   }
 };
 
+// Get all tile image paths for preloading
+export const getAllTileImagePaths = (): string[] => {
+  const paths: string[] = [];
+  // Dots (Pin), Bamboo (Sou), Characters (Man)
+  for (let i = 1; i <= 9; i++) {
+    paths.push(`/tiles/Pin${i}.svg`);
+    paths.push(`/tiles/Sou${i}.svg`);
+    paths.push(`/tiles/Man${i}.svg`);
+  }
+  // Winds
+  paths.push("/tiles/Ton.svg", "/tiles/Nan.svg", "/tiles/Shaa.svg", "/tiles/Pei.svg");
+  // Dragons
+  paths.push("/tiles/Chun.svg", "/tiles/Hatsu.svg", "/tiles/Haku.svg");
+  // Back
+  paths.push("/tiles/Back.svg");
+  return paths;
+};
+
 export function Tile3D({
   tile,
   position,
@@ -58,7 +76,7 @@ export function Tile3D({
   onClick,
   onDoubleClick,
 }: Tile3DProps) {
-  const meshRef = useRef<Mesh>(null);
+  const groupRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
   const lastClickRef = useRef<number>(0);
 
@@ -79,21 +97,23 @@ export function Tile3D({
     }
   };
 
-  // Hover animation
+  // Hover animation - animate the entire group so tile face moves with tile
   useFrame(() => {
-    if (meshRef.current && isPlayable) {
+    if (groupRef.current && isPlayable) {
       const targetY = position[1] + (hovered || isSelected ? 0.1 : 0);
-      meshRef.current.position.y += (targetY - meshRef.current.position.y) * 0.1;
+      groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.1;
     }
   });
 
   const faceColor = isSelected ? TILE_SELECTED_COLOR : TILE_FACE_COLOR;
-  const imagePath = faceDown ? "/tiles/Back.svg" : getTileImagePath(tile.suit, tile.value);
 
   return (
-    <group position={position} rotation={rotation}>
+    <group
+      ref={groupRef}
+      position={[position[0], position[1], position[2]]}
+      rotation={rotation}
+    >
       <RoundedBox
-        ref={meshRef}
         args={[TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH]}
         radius={0.03}
         smoothness={4}

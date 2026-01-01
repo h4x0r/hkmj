@@ -1,10 +1,19 @@
 "use client";
 
+import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
-import { Tile3D } from "./Tile3D";
+import { Tile3D, getAllTileImagePaths } from "./Tile3D";
 import { useGameStore } from "@/stores/game";
 import type { TileWithId } from "@/lib/game/tiles";
+
+// Preload all tile images on module load
+if (typeof window !== "undefined") {
+  getAllTileImagePaths().forEach((path) => {
+    const img = new Image();
+    img.src = path;
+  });
+}
 
 interface PlayerHandProps {
   tiles: TileWithId[];
@@ -77,20 +86,13 @@ function DiscardPile({ tiles }: DiscardPileProps) {
   );
 }
 
-function TableSurface() {
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-      <planeGeometry args={[12, 12]} />
-      <meshStandardMaterial color="#1a472a" roughness={0.8} />
-    </mesh>
-  );
-}
 
 interface GameBoardProps {
   currentUserId: string;
   selectedTileId?: string;
   onTileSelect?: (tileId: string) => void;
   onTileDoubleClick?: (tileId: string) => void;
+  onCanvasDoubleClick?: () => void;
 }
 
 export function GameBoard({
@@ -98,8 +100,24 @@ export function GameBoard({
   selectedTileId,
   onTileSelect,
   onTileDoubleClick,
+  onCanvasDoubleClick,
 }: GameBoardProps) {
   const { players, discardPile, currentPlayerIndex } = useGameStore();
+  const lastClickRef = useRef<number>(0);
+
+  // Handle canvas double-click for drawing tiles
+  const handleCanvasClick = () => {
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickRef.current;
+
+    if (timeSinceLastClick < 300) {
+      // Double-click detected
+      onCanvasDoubleClick?.();
+      lastClickRef.current = 0;
+    } else {
+      lastClickRef.current = now;
+    }
+  };
 
   // Find the current user's seat index
   const userSeatIndex = players.findIndex((p) => p.id === currentUserId);
@@ -126,7 +144,7 @@ export function GameBoard({
 
   return (
     <div className="w-full h-full">
-      <Canvas shadows>
+      <Canvas shadows onPointerMissed={handleCanvasClick}>
         <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={50} />
         <OrbitControls
           enablePan={false}
@@ -146,8 +164,16 @@ export function GameBoard({
         />
         <Environment preset="studio" />
 
-        {/* Table surface */}
-        <TableSurface />
+        {/* Table surface - clickable for draw action */}
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.05, 0]}
+          receiveShadow
+          onClick={handleCanvasClick}
+        >
+          <planeGeometry args={[12, 12]} />
+          <meshStandardMaterial color="#1a472a" roughness={0.8} />
+        </mesh>
 
         {/* Discard pile in center */}
         <DiscardPile tiles={discardPile} />

@@ -326,6 +326,7 @@ export default function GamePage() {
             selectedTileId={selectedTileId || undefined}
             onTileSelect={handleTileSelect}
             onTileDoubleClick={handleTileDoubleClick}
+            onCanvasDoubleClick={handleDraw}
           />
         </div>
 
