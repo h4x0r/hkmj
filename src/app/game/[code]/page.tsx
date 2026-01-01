@@ -155,6 +155,24 @@ export default function GamePage() {
     };
   }, [isBotTurn, currentPlayerIndex, players, status, drawTile, discardTile, addSystemMessage, t, locale]);
 
+  // Auto-draw for player when it's their turn
+  useEffect(() => {
+    if (!isMyTurn || !needsToDraw || status !== "playing" || !user) return;
+
+    // Small delay before auto-draw for better UX
+    const timeout = setTimeout(() => {
+      const playerIndex = players.findIndex((p) => p.id === user.id);
+      const drawnTile = drawTile(playerIndex);
+      if (drawnTile) {
+        addSystemMessage(t("game.youDrewTile", { tile: getTileName(drawnTile, locale) }));
+        // Auto-check for win after drawing
+        setTimeout(checkWin, 100);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [isMyTurn, needsToDraw, status, user, players, drawTile, addSystemMessage, t, locale, checkWin]);
+
   // Turn timer countdown
   useEffect(() => {
     // Reset timer when turn changes
@@ -193,19 +211,6 @@ export default function GamePage() {
       }
     };
   }, [isMyTurn, status, currentPlayerIndex, turnTimer, needsToDiscard, currentPlayer, players, user, discardTile, addSystemMessage, t, locale]);
-
-  const handleDraw = useCallback(() => {
-    if (!needsToDraw || !user) return;
-
-    const playerIndex = players.findIndex((p) => p.id === user.id);
-    const drawnTile = drawTile(playerIndex);
-
-    if (drawnTile) {
-      addSystemMessage(t("game.youDrewTile", { tile: getTileName(drawnTile, locale) }));
-      // Auto-check for win after drawing
-      setTimeout(checkWin, 100);
-    }
-  }, [needsToDraw, user, players, drawTile, addSystemMessage, t, checkWin, locale]);
 
   const handleDiscard = useCallback((tileId: string) => {
     if (!needsToDiscard || !user || !currentPlayer) return;
@@ -329,7 +334,6 @@ export default function GamePage() {
               selectedTileId={selectedTileId || undefined}
               onTileSelect={handleTileSelect}
               onTileDoubleClick={handleTileDoubleClick}
-              onCanvasDoubleClick={handleDraw}
             />
           </TilePreloader>
         </div>
@@ -359,27 +363,18 @@ export default function GamePage() {
           </div>
 
           {/* Actions */}
-          {isMyTurn && (
+          {isMyTurn && needsToDiscard && (
             <div className="p-4 border-b border-neutral-800 space-y-2">
-              {needsToDraw && (
-                <button onClick={handleDraw} className="btn btn-primary w-full">
-                  {t("game.drawTile")}
-                </button>
-              )}
-              {needsToDiscard && (
-                <>
-                  <button
-                    onClick={() => selectedTileId && handleDiscard(selectedTileId)}
-                    className="btn btn-secondary w-full"
-                    disabled={!selectedTileId}
-                  >
-                    {t("game.discardSelected")}
-                  </button>
-                  <p className="text-xs text-neutral-500 text-center">
-                    {t("game.doubleClickToDiscard")}
-                  </p>
-                </>
-              )}
+              <button
+                onClick={() => selectedTileId && handleDiscard(selectedTileId)}
+                className="btn btn-secondary w-full"
+                disabled={!selectedTileId}
+              >
+                {t("game.discardSelected")}
+              </button>
+              <p className="text-xs text-neutral-500 text-center">
+                {t("game.doubleClickToDiscard")}
+              </p>
             </div>
           )}
 

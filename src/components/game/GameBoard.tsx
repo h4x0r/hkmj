@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import { Tile3D } from "./Tile3D";
@@ -84,7 +83,6 @@ interface GameBoardProps {
   selectedTileId?: string;
   onTileSelect?: (tileId: string) => void;
   onTileDoubleClick?: (tileId: string) => void;
-  onCanvasDoubleClick?: () => void;
 }
 
 export function GameBoard({
@@ -92,24 +90,8 @@ export function GameBoard({
   selectedTileId,
   onTileSelect,
   onTileDoubleClick,
-  onCanvasDoubleClick,
 }: GameBoardProps) {
   const { players, discardPile, currentPlayerIndex } = useGameStore();
-  const lastClickRef = useRef<number>(0);
-
-  // Handle canvas double-click for drawing tiles
-  const handleCanvasClick = () => {
-    const now = Date.now();
-    const timeSinceLastClick = now - lastClickRef.current;
-
-    if (timeSinceLastClick < 300) {
-      // Double-click detected
-      onCanvasDoubleClick?.();
-      lastClickRef.current = 0;
-    } else {
-      lastClickRef.current = now;
-    }
-  };
 
   // Find the current user's seat index
   const userSeatIndex = players.findIndex((p) => p.id === currentUserId);
@@ -136,7 +118,7 @@ export function GameBoard({
 
   return (
     <div className="w-full h-full">
-      <Canvas shadows onPointerMissed={handleCanvasClick}>
+      <Canvas shadows>
         <PerspectiveCamera makeDefault position={[0, 8, 10]} fov={50} />
         <OrbitControls
           enablePan={false}
@@ -156,13 +138,8 @@ export function GameBoard({
         />
         <Environment preset="studio" />
 
-        {/* Table surface - clickable for draw action */}
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, -0.05, 0]}
-          receiveShadow
-          onClick={handleCanvasClick}
-        >
+        {/* Table surface */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
           <planeGeometry args={[12, 12]} />
           <meshStandardMaterial color="#1a472a" roughness={0.8} />
         </mesh>
