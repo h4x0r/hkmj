@@ -25,7 +25,7 @@ A multiplayer Hong Kong Mahjong game built with Next.js, featuring 3D WebGL grap
 - **i18n**: next-intl
 - **Theming**: next-themes
 - **Backend**: Supabase (auth, realtime, database)
-- **Testing**: Vitest (217 tests), Playwright (7 e2e tests)
+- **Testing**: Vitest (221 tests), Playwright (7 e2e tests)
 
 ## Getting Started
 
@@ -79,6 +79,10 @@ The game uses the Hong Kong scoring system with configurable minimum faan requir
 - **1 faan**: All Chows, Concealed Hand, etc.
 - **3 faan**: All Pungs, Half Flush, etc.
 - **6+ faan**: Full Flush, All Honors, etc.
+
+## Credits
+
+- **Tile Graphics**: [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles) (CC0 Public Domain)
 
 ## License
 

@@ -26,38 +26,26 @@ const TILE_FACE_COLOR = "#f5f5dc"; // Beige/ivory
 const TILE_BACK_COLOR = "#228B22"; // Forest green
 const TILE_SELECTED_COLOR = "#fef08a"; // Yellow highlight
 
-// Suit colors
-const SUIT_COLORS: Record<string, string> = {
-  bamboo: "#228B22",
-  character: "#dc2626",
-  dot: "#2563eb",
-  wind: "#1f2937",
-  dragon: "#1f2937",
-};
-
-const WIND_SYMBOLS: Record<number, string> = {
-  1: "東",
-  2: "南",
-  3: "西",
-  4: "北",
-};
-
-const DRAGON_SYMBOLS: Record<number, string> = {
-  1: "中",
-  2: "發",
-  3: "白",
-};
-
-const DRAGON_COLORS: Record<number, string> = {
-  1: "#dc2626", // Red dragon
-  2: "#22c55e", // Green dragon
-  3: "#374151", // White dragon (dark gray outline)
-};
-
-const SUIT_LETTERS: Record<string, string> = {
-  bamboo: "B",
-  character: "C",
-  dot: "D",
+// Map suit + value to FluffyStuff SVG file names
+const getTileImagePath = (suit: string, value: number): string => {
+  switch (suit) {
+    case "dot":
+      return `/tiles/Pin${value}.svg`;
+    case "bamboo":
+      return `/tiles/Sou${value}.svg`;
+    case "character":
+      return `/tiles/Man${value}.svg`;
+    case "wind":
+      // 1=East(Ton), 2=South(Nan), 3=West(Shaa), 4=North(Pei)
+      const windNames = ["", "Ton", "Nan", "Shaa", "Pei"];
+      return `/tiles/${windNames[value]}.svg`;
+    case "dragon":
+      // 1=Red(Chun), 2=Green(Hatsu), 3=White(Haku)
+      const dragonNames = ["", "Chun", "Hatsu", "Haku"];
+      return `/tiles/${dragonNames[value]}.svg`;
+    default:
+      return `/tiles/Back.svg`;
+  }
 };
 
 export function Tile3D({
@@ -99,25 +87,8 @@ export function Tile3D({
     }
   });
 
-  const getTileDisplay = (): { main: string; sub?: string; color: string } => {
-    const { suit, value } = tile;
-
-    if (suit === "wind") {
-      return { main: WIND_SYMBOLS[value] || "?", color: "#1f2937" };
-    }
-    if (suit === "dragon") {
-      return { main: DRAGON_SYMBOLS[value] || "?", color: DRAGON_COLORS[value] || "#1f2937" };
-    }
-
-    return {
-      main: `${value}`,
-      sub: SUIT_LETTERS[suit],
-      color: SUIT_COLORS[suit] || "#1f2937",
-    };
-  };
-
   const faceColor = isSelected ? TILE_SELECTED_COLOR : TILE_FACE_COLOR;
-  const display = getTileDisplay();
+  const imagePath = faceDown ? "/tiles/Back.svg" : getTileImagePath(tile.suit, tile.value);
 
   return (
     <group position={position} rotation={rotation}>
@@ -137,49 +108,26 @@ export function Tile3D({
         />
       </RoundedBox>
 
-      {/* Tile face content using HTML overlay */}
-      {!faceDown && (
-        <Html
-          position={[0, 0, TILE_DEPTH / 2 + 0.01]}
-          center
-          distanceFactor={8}
-          style={{ pointerEvents: "none" }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "serif",
-              userSelect: "none",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "24px",
-                fontWeight: "bold",
-                color: display.color,
-                lineHeight: 1,
-              }}
-            >
-              {display.main}
-            </span>
-            {display.sub && (
-              <span
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  color: display.color,
-                  lineHeight: 1,
-                }}
-              >
-                {display.sub}
-              </span>
-            )}
-          </div>
-        </Html>
-      )}
+      {/* Tile face image */}
+      <Html
+        position={[0, 0, TILE_DEPTH / 2 + 0.01]}
+        center
+        distanceFactor={8}
+        style={{ pointerEvents: "none" }}
+      >
+        <img
+          src={imagePath}
+          alt={`${tile.suit} ${tile.value}`}
+          style={{
+            width: "40px",
+            height: "56px",
+            objectFit: "contain",
+            userSelect: "none",
+            filter: isSelected ? "brightness(1.1)" : "none",
+          }}
+          draggable={false}
+        />
+      </Html>
     </group>
   );
 }
