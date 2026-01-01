@@ -135,13 +135,10 @@ export default function GamePage() {
 
     botTimeoutRef.current = setTimeout(() => {
       if (botNeedsToDraw) {
-        // Bot draws a tile
-        const drawnTile = drawTile(currentPlayerIndex);
-        if (drawnTile) {
-          addSystemMessage(t("game.botDrewTile", { name: botPlayer.displayName }));
-        }
+        // Bot draws a tile silently (no message)
+        drawTile(currentPlayerIndex);
       } else if (botNeedsToDiscard) {
-        // Bot discards a random tile (simple AI)
+        // Bot discards a random tile - only show this message
         const randomIndex = Math.floor(Math.random() * botPlayer.hand.length);
         const tileToDiscard = botPlayer.hand[randomIndex];
         const success = discardTile(currentPlayerIndex, tileToDiscard.id);
