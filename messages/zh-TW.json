@@ -1,0 +1,84 @@
+{
+  "common": {
+    "appName": "香港麻雀",
+    "loading": "載入中...",
+    "error": "錯誤",
+    "cancel": "取消",
+    "confirm": "確認",
+    "save": "儲存",
+    "back": "返回",
+    "send": "發送"
+  },
+  "auth": {
+    "enterDisplayName": "輸入你的顯示名稱",
+    "playAsGuest": "以訪客身份遊玩",
+    "signOut": "登出",
+    "playingAs": "正在遊玩"
+  },
+  "lobby": {
+    "quickPlay": "快速遊戲",
+    "createRoom": "建立房間",
+    "joinRoom": "加入房間",
+    "roomCode": "房間代碼"
+  },
+  "room": {
+    "room": "房間",
+    "players": "玩家",
+    "waitingForPlayer": "等待玩家...",
+    "host": "房主",
+    "ready": "準備",
+    "cancelReady": "取消準備",
+    "startGame": "開始遊戲",
+    "leaveRoom": "離開房間",
+    "chat": "聊天",
+    "typeMessage": "輸入訊息...",
+    "quickPhrases": "快捷短語"
+  },
+  "settings": {
+    "title": "設定",
+    "minFaan": "最低番數",
+    "anyWin": "任何和牌",
+    "faan": "番",
+    "sessionType": "遊戲類型",
+    "singleRound": "單局",
+    "eastOnly": "東風戰（4局）",
+    "fullGame": "全場（16局）",
+    "turnTimer": "回合計時（秒）",
+    "fast": "快速",
+    "normal": "一般",
+    "relaxed": "輕鬆",
+    "casual": "休閒",
+    "voiceChat": "啟用語音聊天",
+    "creating": "建立中..."
+  },
+  "game": {
+    "turn": "{seat}的回合",
+    "yourTurn": "輪到你了！",
+    "tiles": "張牌",
+    "drawTile": "摸牌",
+    "discardSelected": "打出選中的牌",
+    "leave": "離開",
+    "message": "訊息...",
+    "gameOver": "遊戲結束！",
+    "winner": "勝者",
+    "returnToLobby": "返回大廳",
+    "gameStarted": "遊戲開始！你是{seat}。",
+    "youDrewTile": "你摸了一張牌",
+    "youDiscardedTile": "你打出了一張牌"
+  },
+  "seats": {
+    "east": "東",
+    "south": "南",
+    "west": "西",
+    "north": "北"
+  },
+  "theme": {
+    "light": "淺色",
+    "dark": "深色",
+    "system": "跟隨系統"
+  },
+  "language": {
+    "en": "English",
+    "zh-TW": "繁體中文"
+  }
+}

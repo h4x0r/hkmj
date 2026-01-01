@@ -1,0 +1,679 @@
+openapi: 3.1.0
+info:
+  title: Hong Kong Mahjong API
+  version: 1.0.0
+  description: API contracts for multiplayer HK Mahjong game
+
+servers:
+  - url: /api
+    description: Next.js API routes
+  - url: /functions/v1
+    description: Supabase Edge Functions
+
+paths:
+  # Authentication
+  /auth/guest:
+    post:
+      summary: Create guest session
+      operationId: createGuest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName:
+                  type: string
+                  minLength: 2
+                  maxLength: 20
+      responses:
+        '201':
+          description: Guest created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/upgrade:
+    post:
+      summary: Upgrade guest to full account
+      operationId: upgradeGuest
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Account upgraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  # Rooms
+  /rooms:
+    post:
+      summary: Create a new room
+      operationId: createRoom
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomSettings'
+      responses:
+        '201':
+          description: Room created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+
+  /rooms/{code}:
+    get:
+      summary: Get room by invite code
+      operationId: getRoomByCode
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]{6}$'
+      responses:
+        '200':
+          description: Room found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: Room not found
+
+  /rooms/{roomId}/join:
+    post:
+      summary: Join a room
+      operationId: joinRoom
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Joined room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: Room full or banned
+        '404':
+          description: Room not found
+
+  /rooms/{roomId}/leave:
+    post:
+      summary: Leave a room
+      operationId: leaveRoom
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Left room
+
+  /rooms/{roomId}/ready:
+    post:
+      summary: Toggle ready status
+      operationId: toggleReady
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ready]
+              properties:
+                ready:
+                  type: boolean
+      responses:
+        '200':
+          description: Ready status updated
+
+  /rooms/{roomId}/kick:
+    post:
+      summary: Kick player from room (host only)
+      operationId: kickPlayer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Player kicked
+        '403':
+          description: Not room host
+
+  /rooms/{roomId}/ban:
+    post:
+      summary: Ban player from room (host only)
+      operationId: banPlayer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Player banned
+        '403':
+          description: Not room host
+
+  # Game Actions (Edge Functions)
+  /game/action:
+    post:
+      summary: Submit game action
+      operationId: submitAction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameAction'
+      responses:
+        '200':
+          description: Action processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Matchmaking
+  /matchmaking/join:
+    post:
+      summary: Join matchmaking queue
+      operationId: joinQueue
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferences:
+                  $ref: '#/components/schemas/RoomSettings'
+      responses:
+        '200':
+          description: Joined queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  position:
+                    type: integer
+                  estimatedWait:
+                    type: integer
+                    description: Estimated seconds
+
+  /matchmaking/leave:
+    post:
+      summary: Leave matchmaking queue
+      operationId: leaveQueue
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Left queue
+
+  /matchmaking/accept:
+    post:
+      summary: Accept found match
+      operationId: acceptMatch
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [matchId]
+              properties:
+                matchId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Match accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+
+  # Chat
+  /rooms/{roomId}/messages:
+    post:
+      summary: Send chat message
+      operationId: sendMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content, type]
+              properties:
+                content:
+                  type: string
+                  maxLength: 500
+                type:
+                  type: string
+                  enum: [text, quick_phrase, emoji]
+      responses:
+        '201':
+          description: Message sent
+        '429':
+          description: Rate limited
+
+  # Reports
+  /reports:
+    post:
+      summary: Submit report
+      operationId: submitReport
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '201':
+          description: Report submitted
+
+  # Stats & Replays
+  /users/{userId}/stats:
+    get:
+      summary: Get user statistics
+      operationId: getUserStats
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStats'
+
+  /replays/{gameId}:
+    get:
+      summary: Get game replay
+      operationId: getReplay
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Replay data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Replay'
+        '404':
+          description: Replay not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        isGuest:
+          type: boolean
+
+    UserStats:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        wins:
+          type: integer
+        losses:
+          type: integer
+        eloRating:
+          type: integer
+        gamesPlayed:
+          type: integer
+        highestFaan:
+          type: integer
+
+    RoomSettings:
+      type: object
+      properties:
+        minFaan:
+          type: integer
+          minimum: 0
+          maximum: 5
+          default: 3
+        sessionType:
+          type: string
+          enum: [single, east_only, full]
+          default: single
+        flowerTiles:
+          type: boolean
+          default: false
+        voiceEnabled:
+          type: boolean
+          default: true
+        turnTimer:
+          type: integer
+          minimum: 10
+          maximum: 60
+          default: 15
+
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        hostId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [waiting, playing, finished]
+        settings:
+          $ref: '#/components/schemas/RoomSettings'
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoomPlayer'
+
+    RoomPlayer:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        seat:
+          type: integer
+        isReady:
+          type: boolean
+
+    GameAction:
+      type: object
+      required: [gameId, type]
+      properties:
+        gameId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [DRAW, DISCARD, PONG, KONG, CHOW, WIN, PASS]
+        tile:
+          type: string
+          description: Tile code (e.g., "3B", "RD")
+        tiles:
+          type: array
+          items:
+            type: string
+          description: Tiles for meld
+        kongType:
+          type: string
+          enum: [exposed, concealed, added]
+
+    GameState:
+      type: object
+      properties:
+        gameId:
+          type: string
+          format: uuid
+        phase:
+          type: string
+          enum: [dealing, playing, claim_window, scoring, finished]
+        currentTurn:
+          type: integer
+        dealerSeat:
+          type: integer
+        wallRemaining:
+          type: integer
+        lastAction:
+          $ref: '#/components/schemas/GameAction'
+        turnDeadline:
+          type: string
+          format: date-time
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/GamePlayer'
+
+    GamePlayer:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        seat:
+          type: integer
+        handCount:
+          type: integer
+          description: Number of tiles (hidden for opponents)
+        hand:
+          type: array
+          items:
+            type: string
+          description: Only present for own hand
+        discards:
+          type: array
+          items:
+            type: string
+        melds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Meld'
+        score:
+          type: integer
+
+    Meld:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [chow, pong, kong]
+        tiles:
+          type: array
+          items:
+            type: string
+        fromPlayer:
+          type: integer
+          nullable: true
+        concealed:
+          type: boolean
+
+    ReportRequest:
+      type: object
+      required: [reportedId, reason]
+      properties:
+        reportedId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          enum: [harassment, cheating, griefing, inappropriate_name]
+        details:
+          type: string
+          maxLength: 1000
+
+    Replay:
+      type: object
+      properties:
+        gameId:
+          type: string
+          format: uuid
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                format: uuid
+              displayName:
+                type: string
+              seat:
+                type: integer
+              finalScore:
+                type: integer
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              seat:
+                type: integer
+              action:
+                $ref: '#/components/schemas/GameAction'
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string

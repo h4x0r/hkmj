@@ -1,0 +1,84 @@
+{
+  "common": {
+    "appName": "Hong Kong Mahjong",
+    "loading": "Loading...",
+    "error": "Error",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "back": "Back",
+    "send": "Send"
+  },
+  "auth": {
+    "enterDisplayName": "Enter your display name",
+    "playAsGuest": "Play as Guest",
+    "signOut": "Sign out",
+    "playingAs": "Playing as"
+  },
+  "lobby": {
+    "quickPlay": "Quick Play",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "roomCode": "Room Code"
+  },
+  "room": {
+    "room": "Room",
+    "players": "Players",
+    "waitingForPlayer": "Waiting for player...",
+    "host": "Host",
+    "ready": "Ready",
+    "cancelReady": "Cancel Ready",
+    "startGame": "Start Game",
+    "leaveRoom": "Leave Room",
+    "chat": "Chat",
+    "typeMessage": "Type a message...",
+    "quickPhrases": "Quick phrases"
+  },
+  "settings": {
+    "title": "Settings",
+    "minFaan": "Minimum Faan",
+    "anyWin": "Any win",
+    "faan": "Faan",
+    "sessionType": "Session Type",
+    "singleRound": "Single Round",
+    "eastOnly": "East Only (4 rounds)",
+    "fullGame": "Full Game (16 rounds)",
+    "turnTimer": "Turn Timer (seconds)",
+    "fast": "Fast",
+    "normal": "Normal",
+    "relaxed": "Relaxed",
+    "casual": "Casual",
+    "voiceChat": "Enable Voice Chat",
+    "creating": "Creating..."
+  },
+  "game": {
+    "turn": "{seat}'s turn",
+    "yourTurn": "Your Turn!",
+    "tiles": "tiles",
+    "drawTile": "Draw Tile",
+    "discardSelected": "Discard Selected",
+    "leave": "Leave",
+    "message": "Message...",
+    "gameOver": "Game Over!",
+    "winner": "Winner",
+    "returnToLobby": "Return to Lobby",
+    "gameStarted": "Game started! You are {seat}.",
+    "youDrewTile": "You drew a tile",
+    "youDiscardedTile": "You discarded a tile"
+  },
+  "seats": {
+    "east": "East",
+    "south": "South",
+    "west": "West",
+    "north": "North"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "en": "English",
+    "zh-TW": "繁體中文"
+  }
+}
