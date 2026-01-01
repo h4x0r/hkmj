@@ -65,13 +65,13 @@
     "returnToLobby": "Return to Lobby",
     "gameStarted": "Game started! You are {seat}.",
     "youDrewTile": "You drew a tile",
-    "youDiscardedTile": "You discarded a tile",
+    "youDiscardedTile": "You discarded {tile}",
     "botEast": "Bot South",
     "botSouth": "Bot West",
     "botWest": "Bot North",
     "botDrewTile": "{name} drew a tile",
-    "botDiscardedTile": "{name} discarded a tile",
-    "timeoutDiscard": "Time's up! Auto-discarded a tile"
+    "botDiscardedTile": "{name} discarded {tile}",
+    "timeoutDiscard": "Time's up! Auto-discarded {tile}"
   },
   "seats": {
     "east": "East",

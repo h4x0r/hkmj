@@ -11,6 +11,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { encodeTile } from "@/lib/game/tiles";
 import { isWinningHand } from "@/lib/game/win";
 import { calculateFaan } from "@/lib/game/faan";
+import { getTileName } from "@/lib/game/tileName";
 
 // Dynamic import for 3D components (no SSR)
 const GameBoard = dynamic(
@@ -44,7 +45,7 @@ export default function GamePage() {
     declareWin,
   } = useGameStore();
   const { messages, addMessage, addSystemMessage, quickPhrases } = useChatStore();
-  const { turnTimer } = useSettingsStore();
+  const { turnTimer, locale } = useSettingsStore();
 
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
@@ -140,7 +141,7 @@ export default function GamePage() {
         const tileToDiscard = botPlayer.hand[randomIndex];
         const success = discardTile(currentPlayerIndex, tileToDiscard.id);
         if (success) {
-          addSystemMessage(t("game.botDiscardedTile", { name: botPlayer.displayName }));
+          addSystemMessage(t("game.botDiscardedTile", { name: botPlayer.displayName, tile: getTileName(tileToDiscard, locale) }));
         }
       }
     }, delay);
@@ -150,7 +151,7 @@ export default function GamePage() {
         clearTimeout(botTimeoutRef.current);
       }
     };
-  }, [isBotTurn, currentPlayerIndex, players, status, drawTile, discardTile, addSystemMessage, t]);
+  }, [isBotTurn, currentPlayerIndex, players, status, drawTile, discardTile, addSystemMessage, t, locale]);
 
   // Turn timer countdown
   useEffect(() => {
@@ -175,7 +176,7 @@ export default function GamePage() {
             const tileToDiscard = currentPlayer.hand[randomIndex];
             const playerIndex = players.findIndex((p) => p.id === user?.id);
             discardTile(playerIndex, tileToDiscard.id);
-            addSystemMessage(t("game.timeoutDiscard"));
+            addSystemMessage(t("game.timeoutDiscard", { tile: getTileName(tileToDiscard, locale) }));
           }
           return turnTimer;
         }
@@ -189,7 +190,7 @@ export default function GamePage() {
         timerRef.current = null;
       }
     };
-  }, [isMyTurn, status, currentPlayerIndex, turnTimer, needsToDiscard, currentPlayer, players, user, discardTile, addSystemMessage, t]);
+  }, [isMyTurn, status, currentPlayerIndex, turnTimer, needsToDiscard, currentPlayer, players, user, discardTile, addSystemMessage, t, locale]);
 
   const handleDraw = useCallback(() => {
     if (!needsToDraw || !user) return;
@@ -205,16 +206,18 @@ export default function GamePage() {
   }, [needsToDraw, user, players, drawTile, addSystemMessage, t, checkWin]);
 
   const handleDiscard = useCallback((tileId: string) => {
-    if (!needsToDiscard || !user) return;
+    if (!needsToDiscard || !user || !currentPlayer) return;
 
+    // Find the tile before discarding so we can show its name
+    const tileToDiscard = currentPlayer.hand.find((t) => t.id === tileId);
     const playerIndex = players.findIndex((p) => p.id === user.id);
     const success = discardTile(playerIndex, tileId);
 
-    if (success) {
+    if (success && tileToDiscard) {
       setSelectedTileId(null);
-      addSystemMessage(t("game.youDiscardedTile"));
+      addSystemMessage(t("game.youDiscardedTile", { tile: getTileName(tileToDiscard, locale) }));
     }
-  }, [needsToDiscard, user, players, discardTile, addSystemMessage, t]);
+  }, [needsToDiscard, user, currentPlayer, players, discardTile, addSystemMessage, t, locale]);
 
   const handleTileSelect = useCallback((tileId: string) => {
     if (!isMyTurn) return;

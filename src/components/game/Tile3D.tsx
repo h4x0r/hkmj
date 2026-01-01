@@ -108,26 +108,41 @@ export function Tile3D({
         />
       </RoundedBox>
 
-      {/* Tile face image */}
-      <Html
-        position={[0, 0, TILE_DEPTH / 2 + 0.01]}
-        center
-        distanceFactor={8}
-        style={{ pointerEvents: "none" }}
-      >
-        <img
-          src={imagePath}
-          alt={`${tile.suit} ${tile.value}`}
-          style={{
-            width: "40px",
-            height: "56px",
-            objectFit: "contain",
-            userSelect: "none",
-            filter: isSelected ? "brightness(1.1)" : "none",
-          }}
-          draggable={false}
-        />
-      </Html>
+      {/* Tile face image - only show for face-up tiles */}
+      {!faceDown && (
+        <Html
+          position={[0, 0, TILE_DEPTH / 2 + 0.01]}
+          center
+          distanceFactor={8}
+          style={{ pointerEvents: "none" }}
+        >
+          <div
+            style={{
+              width: "40px",
+              height: "56px",
+              backgroundColor: "#f5f5dc",
+              borderRadius: "3px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src={getTileImagePath(tile.suit, tile.value)}
+              alt={`${tile.suit} ${tile.value}`}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                userSelect: "none",
+                filter: isSelected ? "brightness(1.1)" : "none",
+              }}
+              draggable={false}
+            />
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
